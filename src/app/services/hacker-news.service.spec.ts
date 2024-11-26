@@ -24,60 +24,27 @@ describe('HackerNewsService', () => {
         expect(service).toBeTruthy();
     });
 
-    it('should fetch new stories', () => {
-        const mockStoryIds = [1, 2, 3, 4, 5];
-
-        service.getNewStories().subscribe(stories => {
-            expect(stories).toEqual(mockStoryIds);
-        });
-
-        const req = httpMock.expectOne('https://hacker-news.firebaseio.com/v0/newstories.json');
-        expect(req.request.method).toBe('GET');
-        req.flush(mockStoryIds);
-    });
-    it('should fetch a single story', () => {
-        const mockStory: Story = {
-            id: 1,
-            title: 'Test Story',
-            url: 'http://test.com',
-            time: 1234567890,
-            type: 'story',
-            by: 'testuser',
-            score: 100
-        };
-
-        service.getStory(1).subscribe(story => {
-            expect(story).toEqual(mockStory);
-        });
-
-        const req = httpMock.expectOne('https://hacker-news.firebaseio.com/v0/item/1.json');
-        expect(req.request.method).toBe('GET');
-        req.flush(mockStory);
-    });
-
     it('should fetch stories page with correct pagination', () => {
-        const mockStoryIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-        const mockStories: Story[] = mockStoryIds.map(id => ({
-            id,
-            title: `Story ${id}`,
-            url: `http://test.com/${id}`,
-            time: 1234567890,
-            type: 'story',
-            by: 'testuser',
-            score: 100
-        }));
+        const mockStories: Story[] = [
+            { id: 1, title: 'Story 1', url: 'http://test.com/1', time: 1234567890, type: 'story', by: 'user1', score: 100 },
+            { id: 2, title: 'Story 2', url: 'http://test.com/2', time: 1234567891, type: 'story', by: 'user2', score: 200 },
+            { id: 3, title: 'Story 3', url: 'http://test.com/3', time: 1234567892, type: 'story', by: 'user3', score: 300 },
+            { id: 4, title: 'Story 4', url: 'http://test.com/4', time: 1234567893, type: 'story', by: 'user4', score: 400 },
+            { id: 5, title: 'Story 5', url: 'http://test.com/5', time: 1234567894, type: 'story', by: 'user5', score: 500 }
+        ];
+        const totalStories = 10; // Toplam hikaye sayısı
+
+        // Mock API yanıtı
+        const mockResponse = { stories: mockStories, total: totalStories };
 
         service.getStoriesPage(1, 5).subscribe(response => {
             expect(response.stories.length).toBe(5);
-            expect(response.total).toBe(mockStoryIds.length);
+            expect(response.total).toBe(totalStories);
+            expect(response.stories).toEqual(mockStories);
         });
 
-        const reqIds = httpMock.expectOne('https://hacker-news.firebaseio.com/v0/newstories.json');
-        reqIds.flush(mockStoryIds);
-
-        mockStoryIds.slice(0, 5).forEach(id => {
-            const req = httpMock.expectOne(`https://hacker-news.firebaseio.com/v0/item/${id}.json`);
-            req.flush(mockStories[id - 1]);
-        });
+        const req = httpMock.expectOne('https://hackernews-brebgba9emg3acgg.ukwest-01.azurewebsites.net/api/Stories/page?page=1&pageSize=5');
+        expect(req.request.method).toBe('GET');
+        req.flush(mockResponse);
     });
 });

@@ -7,29 +7,13 @@ import { Story } from '../models/story.model';
   providedIn: 'root'
 })
 export class HackerNewsService {
-  private baseUrl = 'https://hacker-news.firebaseio.com/v0';
+  private baseUrl = 'https://hackernews-brebgba9emg3acgg.ukwest-01.azurewebsites.net/api/Stories';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
-  getNewStories(): Observable<number[]> {
-    return this.http.get<number[]>(`${this.baseUrl}/newstories.json`);
-  }
-
-  getStory(id: number): Observable<Story> {
-    return this.http.get<Story>(`${this.baseUrl}/item/${id}.json`);
-  }
 
   getStoriesPage(page: number, pageSize: number): Observable<{ stories: Story[], total: number }> {
-    return this.getNewStories().pipe(
-      map(ids => ({
-        pageIds: ids.slice((page - 1) * pageSize, page * pageSize),
-        total: ids.length
-      })),
-      switchMap(({ pageIds, total }) => 
-        forkJoin(pageIds.map(id => this.getStory(id))).pipe(
-          map(stories => ({ stories, total }))
-        )
-      )
-    );
+    const url = `${this.baseUrl}/page?page=${page}&pageSize=${pageSize}`;
+    return this.http.get<{ stories: Story[]; total: number }>(url);
   }
 }
